@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Read},
 };
 
 #[derive(Debug, Parser)]
@@ -27,14 +27,19 @@ pub fn run(args: Args) -> Result<()> {
         match open(&filename) {
             Err(err) => eprintln!("{filename}: {err}"),
             Ok(mut file) => {
-                let mut buf = String::new();
-                for _ in 0..args.lines {
-                    let bytes = file.read_line(&mut buf)?;
-                    if bytes == 0 {
-                        break;
+                if let Some(bytes) = args.bytes {
+                    let bytes = file.bytes().take(bytes).collect::<Result<Vec<_>, _>>();
+                    print!("{}", String::from_utf8_lossy(&bytes?));
+                } else {
+                    let mut buf = String::new();
+                    for _ in 0..args.lines {
+                        let bytes = file.read_line(&mut buf)?;
+                        if bytes == 0 {
+                            break;
+                        }
+                        print!("{buf}");
+                        buf.clear();
                     }
-                    print!("{buf}");
-                    buf.clear();
                 }
             }
         }

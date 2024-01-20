@@ -26,9 +26,15 @@ pub fn run(args: Args) -> Result<()> {
     for filename in args.files {
         match open(&filename) {
             Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => {
-                for line in file.lines().take(args.lines) {
-                    println!("{}", line?);
+            Ok(mut file) => {
+                let mut buf = String::new();
+                for _ in 0..args.lines {
+                    let bytes = file.read_line(&mut buf)?;
+                    if bytes == 0 {
+                        break;
+                    }
+                    print!("{buf}");
+                    buf.clear();
                 }
             }
         }

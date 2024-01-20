@@ -23,10 +23,14 @@ pub fn get_args() -> Result<Args> {
 }
 
 pub fn run(args: Args) -> Result<()> {
-    for filename in args.files {
-        match open(&filename) {
+    let num_files = args.files.len();
+    for (file_num, filename) in args.files.iter().enumerate() {
+        match open(filename) {
             Err(err) => eprintln!("{filename}: {err}"),
             Ok(mut file) => {
+                if num_files > 1 {
+                    println!("{}==> {filename} <==", if file_num > 0 { "\n" } else { "" });
+                }
                 if let Some(bytes) = args.bytes {
                     let bytes = file.bytes().take(bytes).collect::<Result<Vec<_>, _>>();
                     print!("{}", String::from_utf8_lossy(&bytes?));
